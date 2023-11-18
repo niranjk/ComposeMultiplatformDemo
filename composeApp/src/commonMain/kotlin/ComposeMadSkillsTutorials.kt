@@ -2,7 +2,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -10,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,6 +22,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.BottomAppBar
+import androidx.compose.material.Button
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -34,7 +39,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -207,6 +216,104 @@ fun ComposerX(){
         painterResource("compose-icon.xml"),
         null
     )
+}
+
+/***
+ * Understanding Modifier Chaining and Constraints
+ */
+
+@Composable
+@OptIn(ExperimentalResourceApi::class)
+fun MadSkillsModifierChaining(){
+    Image(
+        painterResource("ic_qr_code.xml"),
+        contentDescription = "QR Code",
+        modifier = Modifier.clip(RectangleShape)
+            .padding(16.dp)
+            .fillMaxSize()
+            .size(100.dp) // chaining of modifiers
+    )
+}
+
+@Composable
+fun MadSkillsCustomLayout(
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+){
+    Layout(content = {}, measurePolicy = {measurables, constraints ->
+        // MEASUREMENT SCOPE
+        // 1. Measurement step
+        // Determine sizes of components
+        measurables // Ready to be measured
+        val placeables = measurables.map {// Measured only once
+            it.measure(
+                constraints.copy(
+                    minWidth = constraints.minWidth + 10,
+                    maxWidth = constraints.maxWidth + 10
+                )
+            )
+        }
+        layout(width = 100, height = 400){
+            // PLACEMENT SCOPE
+            // 2. Placement step
+            // Determine positions of components
+            val xPosition = 0
+            val yPosition = 0
+            placeables // Ready to be placed
+            placeables.map { it.place(xPosition, yPosition) }
+        }
+    })
+}
+
+@Composable
+fun MadSkillsLayoutModifier(){
+    Column (
+        modifier = Modifier.fillMaxWidth().background(Color.LightGray).padding(20.dp)
+    ){
+        Text("Top", style = TextStyle(fontWeight = FontWeight.Bold))
+        LazyColumn { // add 2 items
+            items(5) { index ->
+                Text(text = "Item: $index") }
+        }
+        // applying layout modifier in this element
+        Button(
+            onClick = {  },
+            modifier = Modifier.fillMaxWidth().layout{mesaurable, constraints ->
+                val placeable = mesaurable.measure(
+                    constraints = constraints.copy(
+                        // resize by adding extra dps
+                        maxWidth = constraints.maxWidth + 80.dp.roundToPx()
+                    )
+                )
+                layout(placeable.width, placeable.height){
+                    placeable.place(0,0)
+                }
+            },
+            content = { Text("Layout Modifier Button") }
+        )
+        Text("Bottom", style = TextStyle(fontWeight = FontWeight.Bold))
+    }
+}
+
+
+@Composable
+fun MadSkillsBoxWithConstraints(){
+    BoxWithConstraints {
+        if (maxWidth < 100.dp){
+            Text("Small Text")
+        } else {
+            Text("Large Text")
+        }
+    }
+}
+
+@Composable
+fun MadSkillsIntrinsic(){
+    Column(modifier = Modifier.background(color = Color.DarkGray).width(IntrinsicSize.Min)) {
+        Text(text = "Intrinsic", Modifier.background(Color.LightGray).fillMaxWidth())
+        Text(text = "Measurement", Modifier.background(Color.LightGray).fillMaxWidth())
+        Text(text = "of Layouts And Modifiers", Modifier.background(Color.LightGray).fillMaxWidth())
+    }
 }
 
 
